@@ -4,9 +4,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
 import pytz
 
-client = MongoClient("mongodb+srv://5385kim:oracle@cluster0.wqivifa.mongodb.net/?retryWrites=true&w=majority")
+load_dotenv('.env.local')
+
+db_uri = os.environ.get("MONGODB_URI")
+
+client = MongoClient(db_uri)
 db = client["forum"]
 collection = db["post"]
 
@@ -33,7 +39,7 @@ for post_link in post_links:
     posts.append(post_url)
     print(post_url)
     # 5개만 가져오기
-    if len(posts) == 10:
+    if len(posts) == 20:
         break
 
 # 게시글 내용을 가져옴

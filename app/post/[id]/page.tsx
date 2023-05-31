@@ -4,7 +4,8 @@ import { clientPromise } from "@/util/database";
 import dateToString from "@/util/date";
 import { ObjectId } from "mongodb";
 import Link from "next/link";
-import List from "../page";
+import List from "./page";
+import CommentPage from "./comment";
 
 type Props = {
   params: {
@@ -19,19 +20,28 @@ export default async function Detail(props: Props) {
   const db = client.db("forum");
   const postDoc = await db
     .collection("post")
-    .findOne({ _id: new ObjectId(id) });
+    .findOneAndUpdate({ _id: new ObjectId(id) }, { $inc: { view: 1 } });
   console.debug("postDocs", postDoc);
 
-  if (postDoc == null) return <div>Not found</div>;
+  if (postDoc?.value == null) return <div>Not found</div>;
 
   const { _id, category, title, content, cuser, cdate, view, comments, likes } =
-  postDoc;
+    postDoc.value;
 
-    const postDocs  = await db.collection("post").find().toArray();
-    const posts = postDocs.map(postDoc => {
-      const {_id, category, title, content, cuser, cdate, view, comments, likes } = postDoc;
-      return new Post(_id.toString(), category, title, content, cuser, cdate, view, comments, likes);
-    });
+  const postDocs = await db.collection("post").find().toArray();
+  const posts = postDocs.map((postDoc) => {
+    return {
+      _id: postDoc._id.toString(),
+      category: postDoc.category,
+      title: postDoc.title,
+      content: postDoc.content,
+      cdate: postDoc.cdate,
+      cuser: postDoc.cuser,
+      view: postDoc.view,
+      comments: postDoc.comments,
+      likes: postDoc.likes,
+    };  
+  });
 
   return (
     <div>
@@ -52,7 +62,7 @@ export default async function Detail(props: Props) {
         </div>
         <div className="mb-4">
           <span className="font-bold">Created on:</span>{" "}
-          {dateToString(cdate, "yyyy-mm-dd hh:mm:ss")}
+          {/* {dateToString(cdate)} */}
         </div>
         <div className="mb-4">
           <span className="font-bold">Views:</span> {view}
@@ -60,17 +70,24 @@ export default async function Detail(props: Props) {
         <div className="mb-4">
           <span className="font-bold">Likes:</span> {likes}
         </div>
-      </div>
 
-      <div className='flex flex-col gap-5 px-4 py-8'>
-        <section className='ml-3'>
-          <Link href="/post/write"><span className='p-2 font-bold text-gray-800 bg-gray-200 rounded-xl'>글쓰기</span></Link>
+        <hr className="my-10" />
+        
+        <CommentPage post_id={id} />
+
+      </div>
+      
+      <div className="flex flex-col gap-5 px-4 py-8">
+        <section className="ml-3">
+          <Link href="/post/write">
+            <span className="p-2 font-bold text-gray-800 bg-gray-200 rounded-xl">
+              글쓰기
+            </span>
+          </Link>
         </section>
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {posts.map((post) => {
-            return (
-              <PostItem key={post._id} post={post} />
-            );
+            return <PostItem key={post._id} post={post} />;
           })}
         </section>
       </div>

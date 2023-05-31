@@ -73,7 +73,7 @@ function Edit({ params }: Props) {
         <div className="mb-4">
           <label
             htmlFor="title"
-            className="block mb-2 font-medium text-gray-700"
+            className="block mb-2 font-medium text-gray-200"
           >
             Title
           </label>
@@ -88,7 +88,7 @@ function Edit({ params }: Props) {
         <div className="mb-4">
           <label
             htmlFor="content"
-            className="block mb-2 font-medium text-gray-700"
+            className="block mb-2 font-medium text-gray-200"
           >
             Content
           </label>
@@ -99,12 +99,12 @@ function Edit({ params }: Props) {
             className="w-full px-3 py-2 text-gray-700 placeholder-gray-400 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
-        <div className="mb-2 text-sm text-gray-700">Author: {post.cuser}</div>
-        <div className="mb-2 text-sm text-gray-700">View: {post.view}</div>
-        <div className="mb-4 text-sm text-gray-700">
+        <div className="mb-2 text-sm text-gray-200">Author: {post.cuser}</div>
+        <div className="mb-2 text-sm text-gray-200">View: {post.view}</div>
+        <div className="mb-4 text-sm text-gray-200">
           Comments: {post.comments}
         </div>
-        <div className="mb-4 text-sm text-gray-700">Likes: {post.likes}</div>
+        <div className="mb-4 text-sm text-gray-200">Likes: {post.likes}</div>
         <div className="flex items-center justify-end">
           <button
             type="submit"
