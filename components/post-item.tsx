@@ -5,8 +5,6 @@ import { Post } from "@/types/post";
 import dateToString from "@/util/date";
 import Link from "next/link";
 import axios, { AxiosResponse } from "axios";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 interface Props {
     post: Post;
@@ -29,7 +27,7 @@ interface Props {
   };
 
   return (
-    <div className="container px-4 py-8 mx-auto transition bg-white grid-flow-dense">
+    <div className="container px-4 py-8 mx-auto transition rounded-3xl bg-slate-100 grid-flow-dense">
       <div className="flex justify-between">
         <div>
           <span className="px-2 py-1 mx-2 text-sm text-gray-200 bg-gray-800 rounded-md">{category}</span>

@@ -6,6 +6,8 @@ import { ObjectId } from "mongodb";
 import Link from "next/link";
 import List from "./page";
 import CommentPage from "./comment";
+import { publicStorageUrl } from "@/util/storage";
+import { iImage as iImage } from "@/types/img";
 
 type Props = {
   params: {
@@ -40,9 +42,10 @@ export default async function Detail(props: Props) {
       view: postDoc.view,
       comments: postDoc.comments,
       likes: postDoc.likes,
+      files: postDoc.files,
     };  
   });
-
+  
   return (
     <div>
       <div className="p-6 text-gray-700 bg-white rounded-lg shadow-md">
@@ -71,6 +74,21 @@ export default async function Detail(props: Props) {
           <span className="font-bold">Likes:</span> {likes}
         </div>
 
+        <hr className="my-10" />
+
+        <div className="grid grid-cols-8 gap-3">
+          {postDoc.value.files.map((file : iImage) => {
+            return (
+              <a key={file._id} href={`${publicStorageUrl}/${file.src}`}>
+              <img
+                className="object-scale-down w-40 h-40 col-span-1 rounded-full "
+                src={`${publicStorageUrl}/${file.src}`}
+              />
+              </a>
+            );
+          })}
+        </div>
+        
         <hr className="my-10" />
         
         <CommentPage post_id={id} />

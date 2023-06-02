@@ -6,6 +6,9 @@ import ProfileCard from "@/components/auth/profile-card";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 
+import "@fortawesome/fontawesome-svg-core/styles.css";
+import { config } from "@fortawesome/fontawesome-svg-core";
+config.autoAddCss = false;
 
 export const metadata = {
   title: "Create Next App",
@@ -20,12 +23,13 @@ export default async function RootLayout({
   let session = await getServerSession(authOptions);
   return (
     <html lang="en" className="w-full h-full">
-      <body className="w-full h-full">
+      <body className="flex flex-col w-full h-full">
         <div className="flex justify-between gap-5 text-4xl font-bold">
           <div className="flex gap-5 m-5">
             <Link href="/">Home</Link>
             <Link href="/post">Post</Link>
             <Link href="/test">Test</Link>
+            <Link href="/delete_comment">DeleteComment</Link>
           </div>
           <div className="flex gap-5 m-5">
             {session?

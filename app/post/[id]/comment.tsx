@@ -4,75 +4,85 @@ import { Comment } from "@/types/comment";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns-tz";
+import CommentWrite from "./comment_write";
+import { comment } from "postcss";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheck, faDeleteLeft, faReply } from "@fortawesome/free-solid-svg-icons";
+import CommentItem from "./comment_item";
+import { set } from "react-hook-form";
 
 interface Props {
   post_id: string;
 }
 
 const CommentPage = ({ post_id }: Props) => {
-  let [comments, setComments] = useState([]);
+  let [comments, setComments] = useState([] as Comment[]);
+  let [dataMap, setDataMap] = useState(new Map<string, Comment>());
   const inputRef = useRef<HTMLTextAreaElement>();
 
   useEffect(() => {
     axios.get(`/api/post/${post_id}/comment`).then((res) => {
       console.log("res.data", res.data);
-      setComments(
-        res.data.map((comment: Comment) => {
-            const {cdate, ...etc} = comment;
-          return {
-            ...etc,
-            cdate: new Date(comment.cdate),
-          };
-        })
-      );
+      let dataList = [] as Comment[];
+
+      res.data.filter((item: any) => item.parent_id === null).forEach((item: Comment) => {
+        const { cdate, ...etc } = item;
+        const comment = {
+          ...etc,
+          cdate: new Date(item.cdate),
+        };
+        dataList.push(comment);
+        dataMap.set(comment._id, comment);
+      });
+
+      res.data.filter((item: any) => item.parent_id != null).forEach((item: Comment) => {
+        console.log("comment item", item);
+        const { cdate, ...etc } = item;
+        const comment = {
+          ...etc,
+          cdate: new Date(item.cdate),
+        };
+
+        dataMap.set(comment._id, comment);
+
+        const parent = dataMap.get(comment.parent_id);
+        if (parent) {
+          if (!parent.comments) {
+            parent.comments = [];
+          }
+          parent.comments.push(comment);
+        }
+      })
+
+      setDataMap(new Map<string,Comment>(dataMap));
+      setComments(dataList);
     });
   }, []);
+
+  const addComment = (comment: Comment, parent: string | null) => {
+    setDataMap(new Map<string, Comment>(dataMap).set(comment._id, comment));
+    if (parent) {
+      const parentComment = dataMap.get(parent);
+      if (parentComment) {
+        if (!parentComment.comments) {
+          parentComment.comments = [];
+        }
+        parentComment.comments.push(comment);
+        setComments([...comments]);
+      }
+    } else {
+      setComments([...comments, comment]);
+    }
+  };
 
   return (
     <div className="flex-col ">
       <div className="flex-col divide-y divide-dashed">
-        {comments.map((comment: Comment) => {
-          return (
-            <div key={comment._id} className="flex-col p-1 bg-gray-100 ">
-              <div className="flex justify-between">
-                <div className="text-sm">ㅇㅇ</div>
-                <div className="flex">
-                  <div className="text-sm font-bold text-gray-700">{format(comment.cdate, 'yyyy.MM.dd')}</div>
-                  <div className="ml-1 text-sm text-gray-700">{format(comment.cdate, 'HH:mm')}</div>
-                  <div></div>
-                </div>
-              </div>
-              <div className="pl-2 my-1 whitespace-pre-line">
-                {comment.content}
-              </div>
-            </div>
-          );
+        {comments.map((item: Comment) => {
+          return <CommentItem key={item._id} post_id={post_id} comment={item} level={1} addComment={addComment} />
         })}
       </div>
-      <div className="flex my-3">
-        <textarea
-          ref={inputRef}
-          className="w-full p-5 border border-black rounded-md"
-        ></textarea>
-        <button
-          className="px-4 ml-2 text-sm text-white bg-blue-500 rounded-md whitespace-nowrap"
-          onClick={() => {
-            axios.post(`/api/post/${post_id}/comment`, { content: inputRef.current?.value }).then((res) =>{
-                if(res.status === 200){
-                    setComments([...comments, {
-                        ...res.data.data,
-                        cdate: new Date(res.data.data.cdate)
-                    }]);
-                    
-                    // set textarea value to empty
-                    inputRef.current.value = "";
-                }
-            });
-          }}
-        >
-          댓글등록
-        </button>
-      </div>
+      <CommentWrite post_id={post_id} addComment={addComment} parent_id={null} />
     </div>
   );
 };

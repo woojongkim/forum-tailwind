@@ -5,34 +5,43 @@ import { ObjectId } from "mongodb";
 import { authOptions } from "./auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 import { NextApiRequest, NextApiResponse } from "next";
+import { storage } from "@/util/storage";
+import { ListBucketsCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    const client = await clientPromise;
-    const db = client.db("forum");
-    const postDocs = await db.collection("post").find().toArray();
-    const posts = postDocs.map((postDoc) => {
-      return {
-        _id: postDoc._id.toString(),
-        category: postDoc.category,
-        title: postDoc.title,
-        content: postDoc.content,
-        cuser: postDoc.cuser,
-        cdate: postDoc.cdate,
-        view: postDoc.view,
-        comments: postDoc.comments,
-        likes: postDoc.likes,
-      };
-    });
+    // const client = await clientPromise;
+    // const db = client.db("forum");
+    // const postDocs = await db.collection("post").find().toArray();
+    // const posts = postDocs.map((postDoc) => {
+    //   return {
+    //     _id: postDoc._id.toString(),
+    //     category: postDoc.category,
+    //     title: postDoc.title,
+    //     content: postDoc.content,
+    //     cuser: postDoc.cuser,
+    //     cdate: postDoc.cdate,
+    //     view: postDoc.view,
+    //     comments: postDoc.comments,
+    //     likes: postDoc.likes,
+    //   };
+    // });
 
-    return res.status(200).json(posts);
+    console.log(
+      await getSignedUrl(storage, new PutObjectCommand({Bucket: 'woody-storage', Key: 'dog.png'}), { expiresIn: 3600 })
+    )
+
+
+    return res.status(200).json({});
   } else if (req.method === "POST") {
     const session = await getServerSession( req, res, authOptions);
 
-    const { _id, ...post } = req.body;
+    const { _id, ...post } = JSON.parse(req.body);
 
     if (post.title === undefined || post.title === "") {
       return res.status(400).json("제목을 입력해주세요.");
@@ -60,7 +69,7 @@ export default async function handler(
     const result = await col.insertOne(new_post);
     
     if(result.insertedId){
-      return res.redirect(302, `/post/${result.insertedId.toString()}`)
+      return res.status(200).json({msg: "등록에 성공하였습니다.", _id: result.insertedId});
     }else{
       return res.status(400).json("등록에 실패하였습니다.");
     }
