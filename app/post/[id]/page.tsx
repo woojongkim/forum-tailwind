@@ -58,9 +58,6 @@ export default async function Detail(props: Props) {
           <span className="font-bold">Category:</span> {category}
         </div>
         <div className="mb-4">
-          <span className="font-bold">Content:</span> {content}
-        </div>
-        <div className="mb-4">
           <span className="font-bold">Created by:</span> {cuser}
         </div>
         <div className="mb-4">
@@ -72,6 +69,9 @@ export default async function Detail(props: Props) {
         </div>
         <div className="mb-4">
           <span className="font-bold">Likes:</span> {likes}
+        </div>
+        <div className="mb-4">
+          <div className="ck-content" dangerouslySetInnerHTML={{ __html: content }} />
         </div>
 
         <hr className="my-10" />

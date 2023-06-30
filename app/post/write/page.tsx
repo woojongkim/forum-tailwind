@@ -1,25 +1,42 @@
 'use client';
 
 import { iImage } from "@/types/img";
+import { uploadPlugin } from "@/util/editor";
 import { publicStorageUrl } from "@/util/storage";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { CKEditor, CKEditorContext } from "@ckeditor/ckeditor5-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 
-interface Props{
+interface Props {
   title: string;
   content: string;
   files: iImage[];
 }
 
 const PostWrite = () => {
+  const [postData, setPostData] = useState({
+    title: "",
+    content: "",
+  });
   const [imgList, setImgList] = useState([] as iImage[]);
   const fileRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
-  
 
-  const uploadFile = async (event) => {
+  const changeValue = (event : ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+
+    setPostData({
+      ...postData,
+      [name]: value,
+    });
+
+    console.log(name, value);
+    console.log(postData);
+  };
+
+  const uploadFile = async (event : ChangeEvent<HTMLInputElement>) => {
     console.log(event);
     let list = [] as iImage[];
     if (event.target.files && event.target.files.length && event.target.files.length > 0) {
@@ -51,7 +68,7 @@ const PostWrite = () => {
     setImgList(list);
   };
 
-  const lazyUploadFile = (event) => {
+  const lazyUploadFile = (event : ChangeEvent<HTMLInputElement>) => {
     console.log(event);
     let list = [] as iImage[];
     if (event.target.files && event.target.files.length && event.target.files.length > 0) {
@@ -66,29 +83,26 @@ const PostWrite = () => {
   };
 
   const submitPost = async () => {
-    const formData = new FormData(formRef.current!);
-
-    const prop = {} as Props;
-    for (let [k, v] of formData.entries()) {
-      prop[k] = v;
+    let prop = {
+      ...postData,
+      files: [] as iImage[]
     }
-    prop.files = [];
 
     console.log("fileList", fileRef.current?.files);
 
-    if(fileRef.current?.files && fileRef.current?.files.length > 0) {
+    if (fileRef.current?.files && fileRef.current?.files.length > 0) {
       for (let i = 0; i < fileRef.current?.files.length; i++) {
         const file = fileRef.current?.files[i];
         const ext = file.name.split(".").pop();
         const res = await axios.post("/api/storage", { size: file.size, type: file.type, name: file.name });
-        prop.files.push({_id: res.data._id, src: `${res.data._id}.${ext}`});
-        
+        prop.files.push({ _id: res.data._id, src: `${res.data._id}.${ext}` });
+
         const formData = new FormData();
         Object.entries({ file }).forEach(([key, value]) => {
           formData.append(key, value);
         });
 
-        
+
         fetch(res.data.url, {
           method: "PUT",
           body: file,
@@ -104,8 +118,8 @@ const PostWrite = () => {
       body: JSON.stringify(prop),
     }).then((res) => res.json()).then((res) => {
       console.log("res", res);
-        alert("게시글이 등록되었습니다.");
-        router.push(`/post/${res._id}`);
+      alert("게시글이 등록되었습니다.");
+      router.push(`/post/${res._id}`);
     });
 
   }
@@ -113,25 +127,40 @@ const PostWrite = () => {
 
 
   return (
-    <div className="flex flex-col flex-wrap content-center justify-center h-full ">
-      <div className="max-w-2xl">
-        <form ref={formRef} action="/api/post" method="POST">
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="제목"
-              name="title"
-              className="w-full px-3 py-2 leading-tight text-gray-700 border rounded appearance-none focus:outline-none focus:shadow-outline"
-            />
-          </div>
-          <div className="mb-4">
-            <textarea
-              name="content"
-              placeholder="내용"
-              className="w-full px-3 py-2 leading-tight text-gray-700 border rounded appearance-none focus:outline-none focus:shadow-outline"
-            ></textarea>
-          </div>
-        </form>
+    <div className="flex flex-col flex-wrap content-center justify-center h-full gap-5">
+      <div className="max-w-2xl ">
+        <input
+          type="text"
+          placeholder="제목"
+          name="title"
+          className="w-full px-3 py-2 leading-tight text-gray-700 border rounded appearance-none focus:outline-none focus:shadow-outline"
+          onChange={changeValue}
+        />
+        <CKEditor
+          editor={ClassicEditor}
+          data="<p>Hello from CKEditor 5!</p>"
+          // config={{ // (4)
+          //   extraPlugins: [uploadPlugin]
+          // }}
+          onReady={editor => {
+            // You can store the "editor" and use when it is needed.
+            console.log('Editor is ready to use!', editor);
+          }}
+          onChange={(event, editor) => {
+            const data = editor.getData();
+            console.log({ event, editor, data });
+            setPostData({
+              ...postData,
+              content: data
+            })
+          }}
+          onBlur={(event, editor) => {
+            console.log('Blur.', editor);
+          }}
+          onFocus={(event, editor) => {
+            console.log('Focus.', editor);
+          }}
+        />
 
         <div className="mb-4">
           <input type="file" ref={fileRef} name="file" accept="image/*" placeholder="select file" multiple onChange={lazyUploadFile}></input>

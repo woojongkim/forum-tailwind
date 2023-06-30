@@ -26,9 +26,8 @@ export const authOptions = {
     }),
   ],
   secret: process.env.JWT_SECRET!,
-  adapter: MongoDBAdapter(clientPromise),
+  // adapter: MongoDBAdapter(clientPromise),
   debug: true
-  
 };
 
 
